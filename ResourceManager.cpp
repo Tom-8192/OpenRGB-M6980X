@@ -1046,71 +1046,7 @@ void ResourceManager::SetupConfigurationDirectory()
 
 bool ResourceManager::AttemptLocalConnection()
 {
-    LOG_DEBUG("[%s] Attempting local server connection...", RESOURCEMANAGER);
-
     return false;
-
-    auto_connection_client = new NetworkClient();
-
-    std::string titleString = "OpenRGB ";
-    titleString.append(VERSION_STRING);
-
-    auto_connection_client->RequestLocalClient(true);
-    auto_connection_client->SetName(titleString.c_str());
-    auto_connection_client->StartClient();
-
-    for(int timeout = 0; timeout < 10; timeout++)
-    {
-        if(auto_connection_client->GetConnected())
-        {
-            break;
-        }
-        std::this_thread::sleep_for(5ms);
-    }
-
-    if(!auto_connection_client->GetConnected())
-    {
-        LOG_TRACE("[%s] Client failed to connect", RESOURCEMANAGER);
-        auto_connection_client->StopClient();
-        LOG_TRACE("[%s] Client stopped", RESOURCEMANAGER);
-
-        delete auto_connection_client;
-
-        auto_connection_client = NULL;
-    }
-    else
-    {
-        ResourceManager::get()->RegisterNetworkClient(auto_connection_client);
-        LOG_TRACE("[%s] Registered network client", RESOURCEMANAGER);
-
-        success = true;
-
-        /*-------------------------------------------------*\
-        | Wait up to 5 seconds for the client connection to |
-        | retrieve all controllers                          |
-        \*-------------------------------------------------*/
-        for(int timeout = 0; timeout < 1000; timeout++)
-        {
-            if(auto_connection_client->GetOnline())
-            {
-                break;
-            }
-            std::this_thread::sleep_for(5ms);
-        }
-
-        /*-------------------------------------------------*\
-        | If local client, set local log level to server's  |
-        | log level and download log entries                |
-        \*-------------------------------------------------*/
-        if(auto_connection_client->GetLocal() && auto_connection_client->GetSupportsLogManagerAPI())
-        {
-            unsigned int log_level = auto_connection_client->LogManager_GetLogLevel();
-            LogManager::get()->SetLogLevel(log_level, true);
-            auto_connection_client->LogManager_GetLogBuffer();
-        }
-    }
-
-    return success;
 }
 
 void ResourceManager::Initialize(bool tryConnect, bool detectDevices, bool startServer, bool applyPostOptions)
