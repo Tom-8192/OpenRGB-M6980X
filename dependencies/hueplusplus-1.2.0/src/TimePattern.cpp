@@ -90,7 +90,7 @@ system_clock::time_point parseTimestamp(const std::string& timestamp)
 std::chrono::system_clock::time_point parseUTCTimestamp(const std::string& timestamp)
 {
     std::tm tm = timestampToTm(timestamp);
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(_WIN32)
     std::time_t ctime = _mkgmtime(&tm);
 #else
     // Non-standard, but POSIX compliant
