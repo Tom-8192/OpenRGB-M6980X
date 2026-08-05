@@ -16,14 +16,10 @@ DetectedControllers DetectGigabyteGhostControllers(hid_device_info* info, const 
 {
     DetectedControllers detected_controllers;
 
-    /* Only open the vendor control interface (MI_01).
-       On Windows the interface_number may be -1 for top-level collections,
-       so we allow -1 as a fallback but prefer interface 1. */
-    if(info->interface_number != 1 && info->interface_number != -1)
-    {
-        return detected_controllers;
-    }
-
+    /* No interface_number filter – the working control interface was not
+       necessarily MI_01 on this device. We use a static guard so only the
+       first successfully-opened HID path (in Windows enumeration order) is
+       registered, giving exactly one device entry. */
     static bool registered = false;
     if(registered)
     {
