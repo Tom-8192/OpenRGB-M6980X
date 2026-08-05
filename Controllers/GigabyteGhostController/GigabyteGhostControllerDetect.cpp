@@ -12,19 +12,15 @@
 #include "GigabyteGhostController.h"
 #include "RGBController_GigabyteGhost.h"
 
-/* Single shared controller instance - all HID paths for this device are
-   added to it so colour packets are broadcast to every interface,
-   which matches the behaviour (and colour control) seen when all 3
-   collections were registered as separate devices. */
-static GigabyteGhostController* g_ghost_controller = nullptr;
-
 DetectedControllers DetectGigabyteGhostControllers(hid_device_info* info, const std::string& name)
 {
     DetectedControllers detected_controllers;
 
-    /* Interface 0 is the correct control interface for this device.
-       Confirmed via ghost_static.py reverse engineering. */
-    if(info->interface_number != 0)
+    /* GHOST_Color_Tool.py (confirmed working) uses hid.enumerate()[0] -
+       the very first path, with NO interface_number filter.
+       We do the same: accept the first call only, via static guard. */
+    static bool registered = false;
+    if(registered)
     {
         return detected_controllers;
     }
@@ -35,12 +31,12 @@ DetectedControllers DetectGigabyteGhostControllers(hid_device_info* info, const 
         return detected_controllers;
     }
 
-    /* Non-blocking mode - required for reliable HID communication */
     hid_set_nonblocking(dev, 1);
 
     GigabyteGhostController*     controller     = new GigabyteGhostController(dev, *info, name);
     RGBController_GigabyteGhost* rgb_controller = new RGBController_GigabyteGhost(controller);
     detected_controllers.push_back(rgb_controller);
+    registered = true;
 
     return detected_controllers;
 }
