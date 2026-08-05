@@ -12,15 +12,18 @@
 #include "GigabyteGhostController.h"
 #include "RGBController_GigabyteGhost.h"
 
+/* Confirmed via ghost_interfaces.py:
+   Interface 1, Col01, Usage Page 0xFF03 is the vendor control interface.
+   This is MI_01&Col01 - the interface that accepts LED colour commands. */
+#define GIGABYTE_GHOST_USAGE_PAGE  0xFF03
+
 DetectedControllers DetectGigabyteGhostControllers(hid_device_info* info, const std::string& name)
 {
     DetectedControllers detected_controllers;
 
-    /* GHOST_Color_Tool.py (confirmed working) uses hid.enumerate()[0] -
-       the very first path, with NO interface_number filter.
-       We do the same: accept the first call only, via static guard. */
-    static bool registered = false;
-    if(registered)
+    /* Only register the vendor-specific interface (Usage Page 0xFF03).
+       Confirmed via enumeration: Interface 1, Col01, MI_01&Col01. */
+    if(info->usage_page != GIGABYTE_GHOST_USAGE_PAGE)
     {
         return detected_controllers;
     }
@@ -31,12 +34,9 @@ DetectedControllers DetectGigabyteGhostControllers(hid_device_info* info, const 
         return detected_controllers;
     }
 
-    hid_set_nonblocking(dev, 1);
-
     GigabyteGhostController*     controller     = new GigabyteGhostController(dev, *info, name);
     RGBController_GigabyteGhost* rgb_controller = new RGBController_GigabyteGhost(controller);
     detected_controllers.push_back(rgb_controller);
-    registered = true;
 
     return detected_controllers;
 }
