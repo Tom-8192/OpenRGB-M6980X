@@ -35,7 +35,7 @@ jobs:
       - name: Compile OpenRGB
         shell: msys2 {0}
         run: |
-          qmake OpenRGB.pro
+          (qmake-qt5 OpenRGB.pro || qmake OpenRGB.pro)
           make compiler_uic_makeall
           make -j$(nproc)
 
