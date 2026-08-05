@@ -1,0 +1,51 @@
+name: Build OpenRGB Windows
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Windows x64 Executable
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup MSYS2 Environment
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-make
+            mingw-w64-x86_64-qt5-base
+            mingw-w64-x86_64-hidapi
+            mingw-w64-x86_64-mbedtls
+            mingw-w64-x86_64-libusb
+
+      - name: Compile OpenRGB
+        shell: msys2 {0}
+        run: |
+          qmake OpenRGB.pro
+          make -j$(nproc)
+
+      - name: Prepare Output Directory
+        shell: msys2 {0}
+        run: |
+          mkdir -p bin_dist
+          cp OpenRGB.exe bin_dist/
+          windeployqt bin_dist/OpenRGB.exe || true
+
+      - name: Upload OpenRGB Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenRGB-M6980X-Windows-x64
+          path: bin_dist/
