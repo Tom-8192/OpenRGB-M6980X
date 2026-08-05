@@ -43,6 +43,7 @@ private:
     std::string              name;
     std::string              version;
 
+    void        Flush(hid_device* dev);
     void        SendFeatureReportAll(const unsigned char* data, size_t size);
     void        UnlockDevice(hid_device* dev);
 };

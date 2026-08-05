@@ -191,6 +191,13 @@ std::string GigabyteGhostController::GetSerialString()
     return "";
 }
 
+void GigabyteGhostController::Flush(hid_device* dev)
+{
+    if(!dev) return;
+    unsigned char buf[GIGABYTE_GHOST_REPORT_SIZE] = { 0 };
+    hid_get_feature_report(dev, buf, GIGABYTE_GHOST_REPORT_SIZE);
+}
+
 void GigabyteGhostController::SendFeatureReportAll(const unsigned char* data, size_t size)
 {
     if(size < 8) return;
@@ -206,7 +213,9 @@ void GigabyteGhostController::SendFeatureReportAll(const unsigned char* data, si
     {
         if(d)
         {
+            Flush(d);
             hid_send_feature_report(d, packet, sizeof(packet));
+            Flush(d);
         }
     }
 }
@@ -225,19 +234,23 @@ void GigabyteGhostController::UnlockDevice(hid_device* dev)
         {
             packet[j + 1] = GHOST_INIT_PACKETS[i][j];
         }
+        Flush(dev);
         hid_send_feature_report(dev, packet, sizeof(packet));
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        Flush(dev);
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 }
 
 void GigabyteGhostController::SetProfileColor(unsigned char profile, unsigned char r, unsigned char g, unsigned char b)
 {
+    // Switch to profile - flush before and after (like Python tool)
     unsigned char profile_cmd[8] = { 0x01, 0x88, profile, 0x00, 0x00, 0x00, 0x00, 0x12 };
-    SendFeatureReportAll(profile_cmd, 8);
+    SendFeatureReportAll(profile_cmd, 8);  // already flushes internally
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
+    // Set color
     unsigned char color_cmd[8] = { 0x01, 0x86, profile, r, g, b, 0x02, 0x00 };
     SendFeatureReportAll(color_cmd, 8);
 
