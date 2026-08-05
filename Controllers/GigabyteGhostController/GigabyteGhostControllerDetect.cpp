@@ -30,4 +30,4 @@ DetectedControllers DetectGigabyteGhostControllers(hid_device_info* info, const 
     return detected_controllers;
 }
 
-REGISTER_HID_DETECTOR_I("Gigabyte GHOST M6980X", DetectGigabyteGhostControllers, GIGABYTE_GHOST_VID, GIGABYTE_GHOST_PID, 0);
+REGISTER_HID_DETECTOR("Gigabyte GHOST M6980X", DetectGigabyteGhostControllers, GIGABYTE_GHOST_VID, GIGABYTE_GHOST_PID);
