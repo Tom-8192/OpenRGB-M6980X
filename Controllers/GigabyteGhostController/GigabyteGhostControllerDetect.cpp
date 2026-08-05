@@ -16,21 +16,29 @@ DetectedControllers DetectGigabyteGhostControllers(hid_device_info* info, const 
 {
     DetectedControllers detected_controllers;
 
+    /* Only open the vendor control interface (MI_01).
+       On Windows the interface_number may be -1 for top-level collections,
+       so we allow -1 as a fallback but prefer interface 1. */
+    if(info->interface_number != 1 && info->interface_number != -1)
+    {
+        return detected_controllers;
+    }
+
+    static bool registered = false;
+    if(registered)
+    {
+        return detected_controllers;
+    }
+
     hid_device* dev = hid_open_path(info->path);
 
     if(dev)
     {
-        GigabyteGhostController* controller = new GigabyteGhostController(dev, *info, name);
+        GigabyteGhostController*     controller     = new GigabyteGhostController(dev, *info, name);
+        RGBController_GigabyteGhost* rgb_controller = new RGBController_GigabyteGhost(controller);
 
-        if(controller->IsValid())
-        {
-            RGBController_GigabyteGhost* rgb_controller = new RGBController_GigabyteGhost(controller);
-            detected_controllers.push_back(rgb_controller);
-        }
-        else
-        {
-            delete controller;
-        }
+        detected_controllers.push_back(rgb_controller);
+        registered = true;
     }
 
     return detected_controllers;
