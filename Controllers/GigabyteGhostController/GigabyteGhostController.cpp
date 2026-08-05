@@ -211,27 +211,19 @@ bool GigabyteGhostController::SendFeatureReport(const unsigned char* data, size_
         packet[i + 1] = data[i];
     }
 
-    Flush();
     int res = hid_send_feature_report(dev, packet, sizeof(packet));
-    Flush();
-
     return (res >= 0);
 }
 
 bool GigabyteGhostController::UnlockDevice()
 {
-    bool success = true;
-
     for(size_t i = 0; i < 130; i++)
     {
-        if(!SendFeatureReport(GHOST_INIT_PACKETS[i], 8))
-        {
-            success = false;
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        SendFeatureReport(GHOST_INIT_PACKETS[i], 8);
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
     }
 
-    return success;
+    return true;
 }
 
 void GigabyteGhostController::SetProfileColor(unsigned char profile, unsigned char r, unsigned char g, unsigned char b)
