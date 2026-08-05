@@ -9,6 +9,17 @@
 
 #include "RGBController_GigabyteGhost.h"
 
+/**------------------------------------------------------------------*\
+    @name Gigabyte GHOST Gaming Mouse (M6980X)
+    @category Mouse
+    @type USB
+    @save :x:
+    @direct :white_check_mark:
+    @effects :x:
+    @detectors DetectGigabyteGhostControllers
+    @comment
+\*-------------------------------------------------------------------*/
+
 static unsigned char QuantizeChannel(RGBColor channel_val)
 {
     if(channel_val < 64)
