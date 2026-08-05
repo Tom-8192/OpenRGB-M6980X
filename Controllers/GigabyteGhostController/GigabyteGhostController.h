@@ -12,7 +12,7 @@
 #pragma once
 
 #include <string>
-#include <vector>
+#include <mutex>
 #include <hidapi.h>
 #include "RGBController.h"
 
@@ -23,27 +23,26 @@
 class GigabyteGhostController
 {
 public:
-    GigabyteGhostController(hid_device* dev_handle, const hid_device_info& info, std::string dev_name);
+    GigabyteGhostController(hid_device* initial_dev, const hid_device_info& info, std::string dev_name);
     ~GigabyteGhostController();
-
-    /* Add an additional HID path for the same physical device.
-       Colour commands will be broadcast to all open handles. */
-    void        AddDevice(hid_device* extra_handle);
 
     std::string GetDeviceLocation();
     std::string GetFirmwareVersion();
     std::string GetNameString();
     std::string GetSerialString();
 
+    /* Opens a fresh HID handle, sends colour command, closes handle.
+       Exactly mirrors GHOST_Color_Tool.py which always opens fresh. */
     void        SetProfileColor(unsigned char profile, unsigned char r, unsigned char g, unsigned char b);
 
 private:
-    std::vector<hid_device*> devs;   /* all open HID handles for this mouse */
-    std::string              location;
-    std::string              name;
-    std::string              version;
+    std::string hid_path;   /* stored path to reopen per update */
+    std::string location;
+    std::string name;
+    std::string version;
+    std::mutex  update_mutex;
 
-    void        Flush(hid_device* dev);
-    void        SendFeatureReportAll(const unsigned char* data, size_t size);
-    void        UnlockDevice(hid_device* dev);
+    static void Flush(hid_device* dev);
+    static bool SendFeatureReport(hid_device* dev, const unsigned char* data, size_t size);
+    static void UnlockDevice(hid_device* dev);
 };

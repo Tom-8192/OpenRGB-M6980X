@@ -147,28 +147,24 @@ static const unsigned char GHOST_INIT_PACKETS[130][8] =
     { 0x01, 0x08, 0x77, 0x70, 0xcc, 0x19, 0x00, 0x75 }
 };
 
-GigabyteGhostController::GigabyteGhostController(hid_device* dev_handle, const hid_device_info& info, std::string dev_name)
+GigabyteGhostController::GigabyteGhostController(hid_device* initial_dev, const hid_device_info& info, std::string dev_name)
 {
+    hid_path = info.path;
     location = info.path;
     name     = dev_name;
     version  = "";
 
-    devs.push_back(dev_handle);
-    UnlockDevice(dev_handle);
+    /* Do the one-time unlock sequence on detection */
+    UnlockDevice(initial_dev);
+
+    /* Close the initial handle so we don't hold the device open permanently!
+       This prevents the mouse from locking up. */
+    hid_close(initial_dev);
 }
 
 GigabyteGhostController::~GigabyteGhostController()
 {
-    for(hid_device* d : devs)
-    {
-        if(d) hid_close(d);
-    }
-}
-
-void GigabyteGhostController::AddDevice(hid_device* extra_handle)
-{
-    devs.push_back(extra_handle);
-    UnlockDevice(extra_handle);
+    /* Nothing to clean up, handle is not held open */
 }
 
 std::string GigabyteGhostController::GetDeviceLocation()
@@ -198,9 +194,9 @@ void GigabyteGhostController::Flush(hid_device* dev)
     hid_get_feature_report(dev, buf, GIGABYTE_GHOST_REPORT_SIZE);
 }
 
-void GigabyteGhostController::SendFeatureReportAll(const unsigned char* data, size_t size)
+bool GigabyteGhostController::SendFeatureReport(hid_device* dev, const unsigned char* data, size_t size)
 {
-    if(size < 8) return;
+    if(!dev || size < 8) return false;
 
     unsigned char packet[GIGABYTE_GHOST_REPORT_SIZE];
     packet[0] = 0x00; // Report ID
@@ -209,34 +205,20 @@ void GigabyteGhostController::SendFeatureReportAll(const unsigned char* data, si
         packet[i + 1] = data[i];
     }
 
-    for(hid_device* d : devs)
-    {
-        if(d)
-        {
-            Flush(d);
-            hid_send_feature_report(d, packet, sizeof(packet));
-            Flush(d);
-        }
-    }
+    Flush(dev);
+    int res = hid_send_feature_report(dev, packet, sizeof(packet));
+    Flush(dev);
+
+    return (res >= 0);
 }
 
 void GigabyteGhostController::UnlockDevice(hid_device* dev)
 {
     if(!dev) return;
 
-    unsigned char packet[GIGABYTE_GHOST_REPORT_SIZE];
-    packet[0] = 0x00;
-
     for(size_t i = 0; i < 130; i++)
     {
-        packet[0] = 0x00;
-        for(size_t j = 0; j < 8; j++)
-        {
-            packet[j + 1] = GHOST_INIT_PACKETS[i][j];
-        }
-        Flush(dev);
-        hid_send_feature_report(dev, packet, sizeof(packet));
-        Flush(dev);
+        SendFeatureReport(dev, GHOST_INIT_PACKETS[i], 8);
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -244,14 +226,26 @@ void GigabyteGhostController::UnlockDevice(hid_device* dev)
 
 void GigabyteGhostController::SetProfileColor(unsigned char profile, unsigned char r, unsigned char g, unsigned char b)
 {
+    /* Mutex prevents concurrent updates from GUI/Effects engine */
+    std::lock_guard<std::mutex> lock(update_mutex);
+
+    /* Open a fresh handle for every update, just like GHOST_Color_Tool.py */
+    hid_device* dev = hid_open_path(hid_path.c_str());
+    if(!dev) return;
+
+    hid_set_nonblocking(dev, 1);
+
     /* Protocol confirmed working via GHOST_Color_Tool.py:
        flush -> packet_switch -> flush -> sleep(500ms) -> packet_color -> flush */
     unsigned char profile_cmd[8] = { 0x01, 0x88, profile, 0x00, 0x00, 0x00, 0x00, 0x12 };
-    SendFeatureReportAll(profile_cmd, 8);  /* SendFeatureReportAll does flush before+after */
+    SendFeatureReport(dev, profile_cmd, 8);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
     unsigned char color_cmd[8] = { 0x01, 0x86, profile, r, g, b, 0x02, 0x00 };
-    SendFeatureReportAll(color_cmd, 8);
+    SendFeatureReport(dev, color_cmd, 8);
+
+    /* Close immediately so the device is free again */
+    hid_close(dev);
 }
 
