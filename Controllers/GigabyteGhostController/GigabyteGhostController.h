@@ -30,7 +30,8 @@ public:
     std::string GetNameString();
     std::string GetSerialString();
 
-    void        UnlockDevice();
+    bool        IsValid() const { return is_valid; }
+    bool        UnlockDevice();
     void        SetProfileColor(unsigned char profile, unsigned char r, unsigned char g, unsigned char b);
 
 private:
@@ -38,7 +39,8 @@ private:
     std::string location;
     std::string name;
     std::string version;
+    bool        is_valid;
 
     void        Flush();
-    void        SendFeatureReport(const unsigned char* data, size_t size);
+    bool        SendFeatureReport(const unsigned char* data, size_t size);
 };

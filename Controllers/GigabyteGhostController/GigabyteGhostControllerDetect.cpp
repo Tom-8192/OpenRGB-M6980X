@@ -15,24 +15,21 @@
 DetectedControllers DetectGigabyteGhostControllers(hid_device_info* info, const std::string& name)
 {
     DetectedControllers detected_controllers;
-    static bool detected = false;
 
-    if(detected)
+    hid_device* dev = hid_open_path(info->path);
+
+    if(dev)
     {
-        return detected_controllers;
-    }
+        GigabyteGhostController* controller = new GigabyteGhostController(dev, *info, name);
 
-    if(info->interface_number == 1 || info->interface_number == -1)
-    {
-        hid_device* dev = hid_open_path(info->path);
-
-        if(dev)
+        if(controller->IsValid())
         {
-            GigabyteGhostController*     controller     = new GigabyteGhostController(dev, *info, name);
             RGBController_GigabyteGhost* rgb_controller = new RGBController_GigabyteGhost(controller);
-
             detected_controllers.push_back(rgb_controller);
-            detected = true;
+        }
+        else
+        {
+            delete controller;
         }
     }
 

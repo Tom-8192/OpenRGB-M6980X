@@ -153,8 +153,9 @@ GigabyteGhostController::GigabyteGhostController(hid_device* dev_handle, const h
     location = info.path;
     name     = dev_name;
     version  = "";
+    is_valid = false;
 
-    UnlockDevice();
+    is_valid = UnlockDevice();
 }
 
 GigabyteGhostController::~GigabyteGhostController()
@@ -196,11 +197,11 @@ void GigabyteGhostController::Flush()
     hid_get_feature_report(dev, buf, GIGABYTE_GHOST_REPORT_SIZE);
 }
 
-void GigabyteGhostController::SendFeatureReport(const unsigned char* data, size_t size)
+bool GigabyteGhostController::SendFeatureReport(const unsigned char* data, size_t size)
 {
     if(!dev || size < 8)
     {
-        return;
+        return false;
     }
 
     unsigned char packet[GIGABYTE_GHOST_REPORT_SIZE];
@@ -211,33 +212,39 @@ void GigabyteGhostController::SendFeatureReport(const unsigned char* data, size_
     }
 
     Flush();
-    hid_send_feature_report(dev, packet, sizeof(packet));
+    int res = hid_send_feature_report(dev, packet, sizeof(packet));
     Flush();
+
+    return (res >= 0);
 }
 
-void GigabyteGhostController::UnlockDevice()
+bool GigabyteGhostController::UnlockDevice()
 {
+    bool success = true;
+
     for(size_t i = 0; i < 130; i++)
     {
-        SendFeatureReport(GHOST_INIT_PACKETS[i], 8);
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        if(!SendFeatureReport(GHOST_INIT_PACKETS[i], 8))
+        {
+            success = false;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+    return success;
 }
 
 void GigabyteGhostController::SetProfileColor(unsigned char profile, unsigned char r, unsigned char g, unsigned char b)
 {
-    // 1. Profilwechsel-Befehl (01 88)
+    // Profile command (01 88)
     unsigned char profile_cmd[8] = { 0x01, 0x88, profile, 0x00, 0x00, 0x00, 0x00, 0x12 };
     SendFeatureReport(profile_cmd, 8);
 
-    // Kritisches Timing: 500ms warten
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-    // 2. Farb-Befehl (01 86)
+    // Color command (01 86)
     unsigned char color_cmd[8]   = { 0x01, 0x86, profile, r, g, b, 0x02, 0x00 };
     SendFeatureReport(color_cmd, 8);
 
-    // Kritisches Timing: 500ms warten für EEPROM Flash Commit
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
 }
