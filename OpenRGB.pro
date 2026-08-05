@@ -371,6 +371,7 @@ win32 {
         super_io/super_io_pawnio.cpp                                                            \
 
     LIBS +=                                                                                     \
+        -L"$$PWD/dependencies/PawnIO" -lPawnIOLib                                              \
         -lmbedtls                                                                               \
         -lmbedx509                                                                              \
         -lmbedcrypto                                                                            \
