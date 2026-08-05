@@ -233,8 +233,6 @@ void GigabyteGhostController::SetProfileColor(unsigned char profile, unsigned ch
     hid_device* dev = hid_open_path(hid_path.c_str());
     if(!dev) return;
 
-    hid_set_nonblocking(dev, 1);
-
     /* Protocol confirmed working via GHOST_Color_Tool.py:
        flush -> packet_switch -> flush -> sleep(500ms) -> packet_color -> flush */
     unsigned char profile_cmd[8] = { 0x01, 0x88, profile, 0x00, 0x00, 0x00, 0x00, 0x12 };
