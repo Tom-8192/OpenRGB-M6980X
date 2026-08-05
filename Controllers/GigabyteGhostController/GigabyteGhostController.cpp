@@ -244,16 +244,13 @@ void GigabyteGhostController::UnlockDevice(hid_device* dev)
 
 void GigabyteGhostController::SetProfileColor(unsigned char profile, unsigned char r, unsigned char g, unsigned char b)
 {
-    // Switch to profile - flush before and after (like Python tool)
+    // Switch profile then set color - 50ms delay confirmed working via ghost_static.py
     unsigned char profile_cmd[8] = { 0x01, 0x88, profile, 0x00, 0x00, 0x00, 0x00, 0x12 };
-    SendFeatureReportAll(profile_cmd, 8);  // already flushes internally
+    SendFeatureReportAll(profile_cmd, 8);
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-    // Set color
     unsigned char color_cmd[8] = { 0x01, 0x86, profile, r, g, b, 0x02, 0x00 };
     SendFeatureReportAll(color_cmd, 8);
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
 }
 

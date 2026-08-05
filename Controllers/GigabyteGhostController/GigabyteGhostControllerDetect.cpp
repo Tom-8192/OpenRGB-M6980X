@@ -22,24 +22,25 @@ DetectedControllers DetectGigabyteGhostControllers(hid_device_info* info, const 
 {
     DetectedControllers detected_controllers;
 
+    /* Interface 0 is the correct control interface for this device.
+       Confirmed via ghost_static.py reverse engineering. */
+    if(info->interface_number != 0)
+    {
+        return detected_controllers;
+    }
+
     hid_device* dev = hid_open_path(info->path);
     if(!dev)
     {
         return detected_controllers;
     }
 
-    if(g_ghost_controller == nullptr)
-    {
-        /* First interface: create the controller and expose it to OpenRGB */
-        g_ghost_controller = new GigabyteGhostController(dev, *info, name);
-        RGBController_GigabyteGhost* rgb_controller = new RGBController_GigabyteGhost(g_ghost_controller);
-        detected_controllers.push_back(rgb_controller);
-    }
-    else
-    {
-        /* Additional interfaces: silently attach to the same controller */
-        g_ghost_controller->AddDevice(dev);
-    }
+    /* Non-blocking mode - required for reliable HID communication */
+    hid_set_nonblocking(dev, 1);
+
+    GigabyteGhostController*     controller     = new GigabyteGhostController(dev, *info, name);
+    RGBController_GigabyteGhost* rgb_controller = new RGBController_GigabyteGhost(controller);
+    detected_controllers.push_back(rgb_controller);
 
     return detected_controllers;
 }
