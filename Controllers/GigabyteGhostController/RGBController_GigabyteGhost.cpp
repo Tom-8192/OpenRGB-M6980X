@@ -92,10 +92,8 @@ void RGBController_GigabyteGhost::DeviceUpdateLEDs()
     unsigned char g = QuantizeChannel(RGBGetGValue(color));
     unsigned char b = QuantizeChannel(RGBGetBValue(color));
 
-    // Update Profile 0, 1, and 2 on mouse hardware
+    // Profile 0 (original working configuration)
     controller->SetProfileColor(0x00, r, g, b);
-    controller->SetProfileColor(0x01, r, g, b);
-    controller->SetProfileColor(0x02, r, g, b);
 }
 
 void RGBController_GigabyteGhost::UpdateZoneLEDs(int /*zone*/)

@@ -226,8 +226,9 @@ void GigabyteGhostController::UnlockDevice(hid_device* dev)
             packet[j + 1] = GHOST_INIT_PACKETS[i][j];
         }
         hid_send_feature_report(dev, packet, sizeof(packet));
-        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
 }
 
 void GigabyteGhostController::SetProfileColor(unsigned char profile, unsigned char r, unsigned char g, unsigned char b)
@@ -235,11 +236,11 @@ void GigabyteGhostController::SetProfileColor(unsigned char profile, unsigned ch
     unsigned char profile_cmd[8] = { 0x01, 0x88, profile, 0x00, 0x00, 0x00, 0x00, 0x12 };
     SendFeatureReportAll(profile_cmd, 8);
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
     unsigned char color_cmd[8] = { 0x01, 0x86, profile, r, g, b, 0x02, 0x00 };
     SendFeatureReportAll(color_cmd, 8);
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
 }
 
