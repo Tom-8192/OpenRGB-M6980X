@@ -365,19 +365,14 @@ win32:HEADERS +=                                                                
     AutoStart/AutoStart-Windows.h                                                               \
     SuspendResume/SuspendResume_Windows.h                                                       \
 
+win32:LIBS += -lsetupapi -lole32 -loleaut32 -luuid -lwbemuuid -lws2_32 -liphlpapi
+
 win32:contains(QMAKE_TARGET.arch, x86_64) {
     win32:SOURCES +=                                                                            \
         i2c_smbus/Windows/i2c_smbus_pawnio.cpp                                                  \
         super_io/super_io_pawnio.cpp                                                            \
 
     LIBS +=                                                                                     \
-        -lws2_32                                                                                \
-        -liphlpapi                                                                              \
-        -lsetupapi                                                                              \
-        -lole32                                                                                 \
-        -loleaut32                                                                              \
-        -luuid                                                                                  \
-        -lwbemuuid                                                                              \
         -L"$$PWD/dependencies/libusb-1.0.27/VS2019/MS64/dll" -llibusb-1.0                       \
         -L"$$PWD/dependencies/hidapi-hotplug-win/x64/" -lhidapi-hotplug                         \
         -L"$$PWD/dependencies/mbedtls-3.2.1/lib/x64/" -lmbedcrypto -lmbedtls -lmbedx509         \
