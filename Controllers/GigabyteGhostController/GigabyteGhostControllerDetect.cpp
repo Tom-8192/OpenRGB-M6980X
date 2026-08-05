@@ -12,29 +12,33 @@
 #include "GigabyteGhostController.h"
 #include "RGBController_GigabyteGhost.h"
 
+/* Single shared controller instance - all HID paths for this device are
+   added to it so colour packets are broadcast to every interface,
+   which matches the behaviour (and colour control) seen when all 3
+   collections were registered as separate devices. */
+static GigabyteGhostController* g_ghost_controller = nullptr;
+
 DetectedControllers DetectGigabyteGhostControllers(hid_device_info* info, const std::string& name)
 {
     DetectedControllers detected_controllers;
 
-    /* No interface_number filter – the working control interface was not
-       necessarily MI_01 on this device. We use a static guard so only the
-       first successfully-opened HID path (in Windows enumeration order) is
-       registered, giving exactly one device entry. */
-    static bool registered = false;
-    if(registered)
+    hid_device* dev = hid_open_path(info->path);
+    if(!dev)
     {
         return detected_controllers;
     }
 
-    hid_device* dev = hid_open_path(info->path);
-
-    if(dev)
+    if(g_ghost_controller == nullptr)
     {
-        GigabyteGhostController*     controller     = new GigabyteGhostController(dev, *info, name);
-        RGBController_GigabyteGhost* rgb_controller = new RGBController_GigabyteGhost(controller);
-
+        /* First interface: create the controller and expose it to OpenRGB */
+        g_ghost_controller = new GigabyteGhostController(dev, *info, name);
+        RGBController_GigabyteGhost* rgb_controller = new RGBController_GigabyteGhost(g_ghost_controller);
         detected_controllers.push_back(rgb_controller);
-        registered = true;
+    }
+    else
+    {
+        /* Additional interfaces: silently attach to the same controller */
+        g_ghost_controller->AddDevice(dev);
     }
 
     return detected_controllers;

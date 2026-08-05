@@ -12,6 +12,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <hidapi.h>
 #include "RGBController.h"
 
@@ -25,22 +26,23 @@ public:
     GigabyteGhostController(hid_device* dev_handle, const hid_device_info& info, std::string dev_name);
     ~GigabyteGhostController();
 
+    /* Add an additional HID path for the same physical device.
+       Colour commands will be broadcast to all open handles. */
+    void        AddDevice(hid_device* extra_handle);
+
     std::string GetDeviceLocation();
     std::string GetFirmwareVersion();
     std::string GetNameString();
     std::string GetSerialString();
 
-    bool        IsValid() const { return is_valid; }
-    bool        UnlockDevice();
     void        SetProfileColor(unsigned char profile, unsigned char r, unsigned char g, unsigned char b);
 
 private:
-    hid_device* dev;
-    std::string location;
-    std::string name;
-    std::string version;
-    bool        is_valid;
+    std::vector<hid_device*> devs;   /* all open HID handles for this mouse */
+    std::string              location;
+    std::string              name;
+    std::string              version;
 
-    void        Flush();
-    bool        SendFeatureReport(const unsigned char* data, size_t size);
+    void        SendFeatureReportAll(const unsigned char* data, size_t size);
+    void        UnlockDevice(hid_device* dev);
 };

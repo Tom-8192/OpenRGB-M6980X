@@ -149,21 +149,26 @@ static const unsigned char GHOST_INIT_PACKETS[130][8] =
 
 GigabyteGhostController::GigabyteGhostController(hid_device* dev_handle, const hid_device_info& info, std::string dev_name)
 {
-    dev      = dev_handle;
     location = info.path;
     name     = dev_name;
     version  = "";
-    is_valid = false;
 
-    is_valid = UnlockDevice();
+    devs.push_back(dev_handle);
+    UnlockDevice(dev_handle);
 }
 
 GigabyteGhostController::~GigabyteGhostController()
 {
-    if(dev)
+    for(hid_device* d : devs)
     {
-        hid_close(dev);
+        if(d) hid_close(d);
     }
+}
+
+void GigabyteGhostController::AddDevice(hid_device* extra_handle)
+{
+    devs.push_back(extra_handle);
+    UnlockDevice(extra_handle);
 }
 
 std::string GigabyteGhostController::GetDeviceLocation()
@@ -186,57 +191,55 @@ std::string GigabyteGhostController::GetSerialString()
     return "";
 }
 
-void GigabyteGhostController::Flush()
+void GigabyteGhostController::SendFeatureReportAll(const unsigned char* data, size_t size)
 {
-    if(!dev)
-    {
-        return;
-    }
-
-    unsigned char buf[GIGABYTE_GHOST_REPORT_SIZE] = { 0 };
-    hid_get_feature_report(dev, buf, GIGABYTE_GHOST_REPORT_SIZE);
-}
-
-bool GigabyteGhostController::SendFeatureReport(const unsigned char* data, size_t size)
-{
-    if(!dev || size < 8)
-    {
-        return false;
-    }
+    if(size < 8) return;
 
     unsigned char packet[GIGABYTE_GHOST_REPORT_SIZE];
-    packet[0] = 0x00; // Report ID 0x00
+    packet[0] = 0x00; // Report ID
     for(size_t i = 0; i < 8; i++)
     {
         packet[i + 1] = data[i];
     }
 
-    int res = hid_send_feature_report(dev, packet, sizeof(packet));
-    return (res >= 0);
+    for(hid_device* d : devs)
+    {
+        if(d)
+        {
+            hid_send_feature_report(d, packet, sizeof(packet));
+        }
+    }
 }
 
-bool GigabyteGhostController::UnlockDevice()
+void GigabyteGhostController::UnlockDevice(hid_device* dev)
 {
+    if(!dev) return;
+
+    unsigned char packet[GIGABYTE_GHOST_REPORT_SIZE];
+    packet[0] = 0x00;
+
     for(size_t i = 0; i < 130; i++)
     {
-        SendFeatureReport(GHOST_INIT_PACKETS[i], 8);
+        packet[0] = 0x00;
+        for(size_t j = 0; j < 8; j++)
+        {
+            packet[j + 1] = GHOST_INIT_PACKETS[i][j];
+        }
+        hid_send_feature_report(dev, packet, sizeof(packet));
         std::this_thread::sleep_for(std::chrono::milliseconds(2));
     }
-
-    return true;
 }
 
 void GigabyteGhostController::SetProfileColor(unsigned char profile, unsigned char r, unsigned char g, unsigned char b)
 {
-    // Profile command (01 88)
     unsigned char profile_cmd[8] = { 0x01, 0x88, profile, 0x00, 0x00, 0x00, 0x00, 0x12 };
-    SendFeatureReport(profile_cmd, 8);
+    SendFeatureReportAll(profile_cmd, 8);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-    // Color command (01 86)
-    unsigned char color_cmd[8]   = { 0x01, 0x86, profile, r, g, b, 0x02, 0x00 };
-    SendFeatureReport(color_cmd, 8);
+    unsigned char color_cmd[8] = { 0x01, 0x86, profile, r, g, b, 0x02, 0x00 };
+    SendFeatureReportAll(color_cmd, 8);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 }
+
