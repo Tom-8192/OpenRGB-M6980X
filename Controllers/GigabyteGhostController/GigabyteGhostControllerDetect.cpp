@@ -30,5 +30,12 @@ DetectedControllers DetectGigabyteGhostControllers(hid_device_info* info, const 
     return detected_controllers;
 }
 
+void RegisterGigabyteGhostDetector()
+{
+    DetectionManager::get()->RegisterHIDDeviceDetector("Gigabyte GHOST M6980X", DetectGigabyteGhostControllers, GIGABYTE_GHOST_VID, GIGABYTE_GHOST_PID, 1, HID_USAGE_PAGE_ANY, HID_USAGE_ANY);
+    DetectionManager::get()->RegisterHIDDeviceDetector("Gigabyte GHOST M6980X", DetectGigabyteGhostControllers, GIGABYTE_GHOST_VID, GIGABYTE_GHOST_PID, 0, HID_USAGE_PAGE_ANY, HID_USAGE_ANY);
+    DetectionManager::get()->RegisterHIDDeviceDetector("Gigabyte GHOST M6980X", DetectGigabyteGhostControllers, GIGABYTE_GHOST_VID, GIGABYTE_GHOST_PID, -1, HID_USAGE_PAGE_ANY, HID_USAGE_ANY);
+}
+
 REGISTER_HID_DETECTOR_I("Gigabyte GHOST M6980X", DetectGigabyteGhostControllers, GIGABYTE_GHOST_VID, GIGABYTE_GHOST_PID, 1);
 REGISTER_HID_DETECTOR_I("Gigabyte GHOST M6980X", DetectGigabyteGhostControllers, GIGABYTE_GHOST_VID, GIGABYTE_GHOST_PID, 0);

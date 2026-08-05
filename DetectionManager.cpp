@@ -152,6 +152,9 @@ DetectionManager::DetectionManager()
 #endif
 #endif
 
+    extern void RegisterGigabyteGhostDetector();
+    RegisterGigabyteGhostDetector();
+
     /*-----------------------------------------------------*\
     | Start the background thread                           |
     \*-----------------------------------------------------*/
