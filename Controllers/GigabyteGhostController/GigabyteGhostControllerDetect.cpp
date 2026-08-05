@@ -15,6 +15,12 @@
 DetectedControllers DetectGigabyteGhostControllers(hid_device_info* info, const std::string& name)
 {
     DetectedControllers detected_controllers;
+    static bool detected = false;
+
+    if(detected)
+    {
+        return detected_controllers;
+    }
 
     if(info->interface_number == 1 || info->interface_number == -1)
     {
@@ -26,6 +32,7 @@ DetectedControllers DetectGigabyteGhostControllers(hid_device_info* info, const 
             RGBController_GigabyteGhost* rgb_controller = new RGBController_GigabyteGhost(controller);
 
             detected_controllers.push_back(rgb_controller);
+            detected = true;
         }
     }
 
