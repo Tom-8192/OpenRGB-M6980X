@@ -373,6 +373,11 @@ win32:contains(QMAKE_TARGET.arch, x86_64) {
     LIBS +=                                                                                     \
         -lws2_32                                                                                \
         -liphlpapi                                                                              \
+        -lsetupapi                                                                              \
+        -lole32                                                                                 \
+        -loleaut32                                                                              \
+        -luuid                                                                                  \
+        -lwbemuuid                                                                              \
         -L"$$PWD/dependencies/libusb-1.0.27/VS2019/MS64/dll" -llibusb-1.0                       \
         -L"$$PWD/dependencies/hidapi-hotplug-win/x64/" -lhidapi-hotplug                         \
         -L"$$PWD/dependencies/mbedtls-3.2.1/lib/x64/" -lmbedcrypto -lmbedtls -lmbedx509         \
