@@ -365,7 +365,7 @@ win32:HEADERS +=                                                                
     AutoStart/AutoStart-Windows.h                                                               \
     SuspendResume/SuspendResume_Windows.h                                                       \
 
-win32:LIBS += -lsetupapi -lole32 -loleaut32 -luuid -lwbemuuid -lws2_32 -liphlpapi
+win32:LIBS += -lsetupapi -lole32 -loleaut32 -luuid -lwbemuuid -lws2_32 -liphlpapi -lhidapi -llibusb-1.0
 
 win32:contains(QMAKE_TARGET.arch, x86_64) {
     win32:SOURCES +=                                                                            \
