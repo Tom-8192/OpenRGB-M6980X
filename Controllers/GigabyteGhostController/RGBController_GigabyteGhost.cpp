@@ -34,7 +34,7 @@ RGBController_GigabyteGhost::RGBController_GigabyteGhost(GigabyteGhostController
     mode StaticMode;
     StaticMode.name       = "Static";
     StaticMode.value      = 0;
-    StaticMode.flags      = MODE_FLAG_HAS_MODE_SPECIFIC_COLORS | MODE_FLAG_MANUAL_SAVE;
+    StaticMode.flags      = MODE_FLAG_HAS_MODE_SPECIFIC_COLOR | MODE_FLAG_MANUAL_SAVE;
     StaticMode.color_mode = MODE_COLORS_PER_LED;
     modes.push_back(StaticMode);
 
@@ -54,7 +54,6 @@ void RGBController_GigabyteGhost::SetupZones()
     logo_zone.leds_min   = 1;
     logo_zone.leds_max   = 1;
     logo_zone.leds_count = 1;
-    logo_zone.matrix_map = nullptr;
     zones.push_back(logo_zone);
 
     led logo_led;
