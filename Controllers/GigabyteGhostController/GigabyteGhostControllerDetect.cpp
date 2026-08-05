@@ -21,13 +21,9 @@ DetectedControllers DetectGigabyteGhostControllers(hid_device_info* info, const 
 {
     DetectedControllers detected_controllers;
 
-    /* Only register the vendor-specific interface (Usage Page 0xFF03).
-       Confirmed via enumeration: Interface 1, Col01, MI_01&Col01. */
-    if(info->usage_page != GIGABYTE_GHOST_USAGE_PAGE)
-    {
-        return detected_controllers;
-    }
-
+    /* MI_00 (Interface 0, Usage Page 0x01) is the correct path.
+       Confirmed: GHOST_Color_Tool.py uses hid.enumerate()[0] = MI_00.
+       OpenRGB filters interface_number==0 before calling us. */
     hid_device* dev = hid_open_path(info->path);
     if(!dev)
     {
@@ -43,5 +39,7 @@ DetectedControllers DetectGigabyteGhostControllers(hid_device_info* info, const 
 
 void RegisterGigabyteGhostDetector()
 {
-    DetectionManager::get()->RegisterHIDDeviceDetector("Gigabyte GHOST M6980X", DetectGigabyteGhostControllers, GIGABYTE_GHOST_VID, GIGABYTE_GHOST_PID, 1, HID_USAGE_PAGE_ANY, HID_USAGE_ANY);
+    /* Register for interface 0 (MI_00) - the path GHOST_Color_Tool.py uses.
+       Python: hid.enumerate(VID, PID)[0] = MI_00, interface=0, usage_page=0x01 */
+    DetectionManager::get()->RegisterHIDDeviceDetector("Gigabyte GHOST M6980X", DetectGigabyteGhostControllers, GIGABYTE_GHOST_VID, GIGABYTE_GHOST_PID, 0, HID_USAGE_PAGE_ANY, HID_USAGE_ANY);
 }
