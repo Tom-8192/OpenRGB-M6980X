@@ -371,7 +371,6 @@ win32 {
         super_io/super_io_pawnio.cpp                                                            \
 
     LIBS +=                                                                                     \
-        "$$PWD/dependencies/hidapi-hotplug-win/x64/hidapi-hotplug.dll"                          \
         -lmbedtls                                                                               \
         -lmbedx509                                                                              \
         -lmbedcrypto                                                                            \
@@ -410,6 +409,11 @@ win32:DEFINES +=                                                                
     HID_HOTPLUG_ENABLED=1                                                                       \
 
 win32:HID_HOTPLUG_ENABLED = "true"
+
+win32-g++ {
+    DEFINES -= HID_HOTPLUG_ENABLED=1
+    HID_HOTPLUG_ENABLED = "false"
+}
 
 win32:RC_ICONS +=                                                                               \
     qt/OpenRGB.ico
