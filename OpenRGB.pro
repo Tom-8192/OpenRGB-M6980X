@@ -371,18 +371,18 @@ win32 {
         super_io/super_io_pawnio.cpp                                                            \
 
     LIBS +=                                                                                     \
+        -L"$$PWD/dependencies/hidapi-hotplug-win/x64" -lhidapi-hotplug                           \
+        -L"$$PWD/dependencies/mbedtls-3.2.1/lib/x64" -lmbedtls -lmbedx509 -lmbedcrypto           \
+        -L"$$PWD/dependencies/libusb-1.0.27/VS2019/MS64/dll" -llibusb-1.0                       \
+        -L"$$PWD/dependencies/PawnIO" -lPawnIOLib                                              \
+        -lhidapi                                                                                \
         -lsetupapi                                                                              \
         -lole32                                                                                 \
         -loleaut32                                                                              \
         -luuid                                                                                  \
         -lwbemuuid                                                                              \
         -lws2_32                                                                                \
-        -liphlpapi                                                                              \
-        -lhidapi                                                                                \
-        -llibusb-1.0                                                                            \
-        -L"$$PWD/dependencies/hidapi-hotplug-win/x64" -lhidapi-hotplug                           \
-        -L"$$PWD/dependencies/mbedtls-3.2.1/lib/x64" -lmbedcrypto -lmbedtls -lmbedx509           \
-        -L"$$PWD/dependencies/PawnIO" -lPawnIOLib
+        -liphlpapi
 }
 
 win32:contains(QMAKE_TARGET.arch, x86) {
