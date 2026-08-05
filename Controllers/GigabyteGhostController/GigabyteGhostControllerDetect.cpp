@@ -15,16 +15,18 @@
 DetectedControllers DetectGigabyteGhostControllers(hid_device_info* info, const std::string& name)
 {
     DetectedControllers detected_controllers;
-    hid_device*         dev;
 
-    dev = hid_open_path(info->path);
-
-    if(dev)
+    if(info->interface_number == 1 || info->interface_number == -1)
     {
-        GigabyteGhostController*     controller     = new GigabyteGhostController(dev, *info, name);
-        RGBController_GigabyteGhost* rgb_controller = new RGBController_GigabyteGhost(controller);
+        hid_device* dev = hid_open_path(info->path);
 
-        detected_controllers.push_back(rgb_controller);
+        if(dev)
+        {
+            GigabyteGhostController*     controller     = new GigabyteGhostController(dev, *info, name);
+            RGBController_GigabyteGhost* rgb_controller = new RGBController_GigabyteGhost(controller);
+
+            detected_controllers.push_back(rgb_controller);
+        }
     }
 
     return detected_controllers;
@@ -33,9 +35,4 @@ DetectedControllers DetectGigabyteGhostControllers(hid_device_info* info, const 
 void RegisterGigabyteGhostDetector()
 {
     DetectionManager::get()->RegisterHIDDeviceDetector("Gigabyte GHOST M6980X", DetectGigabyteGhostControllers, GIGABYTE_GHOST_VID, GIGABYTE_GHOST_PID, 1, HID_USAGE_PAGE_ANY, HID_USAGE_ANY);
-    DetectionManager::get()->RegisterHIDDeviceDetector("Gigabyte GHOST M6980X", DetectGigabyteGhostControllers, GIGABYTE_GHOST_VID, GIGABYTE_GHOST_PID, 0, HID_USAGE_PAGE_ANY, HID_USAGE_ANY);
-    DetectionManager::get()->RegisterHIDDeviceDetector("Gigabyte GHOST M6980X", DetectGigabyteGhostControllers, GIGABYTE_GHOST_VID, GIGABYTE_GHOST_PID, -1, HID_USAGE_PAGE_ANY, HID_USAGE_ANY);
 }
-
-REGISTER_HID_DETECTOR_I("Gigabyte GHOST M6980X", DetectGigabyteGhostControllers, GIGABYTE_GHOST_VID, GIGABYTE_GHOST_PID, 1);
-REGISTER_HID_DETECTOR_I("Gigabyte GHOST M6980X", DetectGigabyteGhostControllers, GIGABYTE_GHOST_VID, GIGABYTE_GHOST_PID, 0);
