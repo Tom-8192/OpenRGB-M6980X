@@ -1046,6 +1046,8 @@ void ResourceManager::SetupConfigurationDirectory()
 
 bool ResourceManager::AttemptLocalConnection()
 {
+    LOG_DEBUG("[%s] Attempting local server connection...", RESOURCEMANAGER);
+
     return false;
 
     auto_connection_client = new NetworkClient();
