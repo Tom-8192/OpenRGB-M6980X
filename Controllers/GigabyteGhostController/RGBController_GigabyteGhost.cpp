@@ -52,7 +52,6 @@ void RGBController_GigabyteGhost::SetupZones()
     profile_zone.leds_min   = 3;
     profile_zone.leds_max   = 3;
     profile_zone.leds_count = 3;
-    profile_zone.matrix_map = NULL;
     zones.push_back(profile_zone);
 
     led p1_led;
