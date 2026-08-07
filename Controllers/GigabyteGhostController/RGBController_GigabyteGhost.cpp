@@ -29,26 +29,12 @@ RGBController_GigabyteGhost::RGBController_GigabyteGhost(GigabyteGhostController
     description = "Gigabyte GHOST Gaming Mouse Device";
     location    = controller->GetDeviceLocation();
 
-    mode Profile1;
-    Profile1.name       = "Profile 1";
-    Profile1.value      = 0;
-    Profile1.flags      = MODE_FLAG_HAS_MODE_SPECIFIC_COLOR | MODE_FLAG_MANUAL_SAVE;
-    Profile1.color_mode = MODE_COLORS_PER_LED;
-    modes.push_back(Profile1);
-
-    mode Profile2;
-    Profile2.name       = "Profile 2";
-    Profile2.value      = 1;
-    Profile2.flags      = MODE_FLAG_HAS_MODE_SPECIFIC_COLOR | MODE_FLAG_MANUAL_SAVE;
-    Profile2.color_mode = MODE_COLORS_PER_LED;
-    modes.push_back(Profile2);
-
-    mode Profile3;
-    Profile3.name       = "Profile 3";
-    Profile3.value      = 2;
-    Profile3.flags      = MODE_FLAG_HAS_MODE_SPECIFIC_COLOR | MODE_FLAG_MANUAL_SAVE;
-    Profile3.color_mode = MODE_COLORS_PER_LED;
-    modes.push_back(Profile3);
+    mode StaticMode;
+    StaticMode.name       = "Direct";
+    StaticMode.value      = 0;
+    StaticMode.flags      = MODE_FLAG_HAS_PER_LED_COLOR;
+    StaticMode.color_mode = MODE_COLORS_PER_LED;
+    modes.push_back(StaticMode);
 
     SetupZones();
 }
@@ -60,42 +46,53 @@ RGBController_GigabyteGhost::~RGBController_GigabyteGhost()
 
 void RGBController_GigabyteGhost::SetupZones()
 {
-    zone logo_zone;
-    logo_zone.name       = "Logo LED";
-    logo_zone.type       = ZONE_TYPE_SINGLE;
-    logo_zone.leds_min   = 1;
-    logo_zone.leds_max   = 1;
-    logo_zone.leds_count = 1;
-    zones.push_back(logo_zone);
+    zone profile_zone;
+    profile_zone.name       = "Hardware Profiles";
+    profile_zone.type       = ZONE_TYPE_LINEAR;
+    profile_zone.leds_min   = 3;
+    profile_zone.leds_max   = 3;
+    profile_zone.leds_count = 3;
+    profile_zone.matrix_map = NULL;
+    zones.push_back(profile_zone);
 
-    led logo_led;
-    logo_led.name = "Logo LED";
-    leds.push_back(logo_led);
+    led p1_led;
+    p1_led.name = "Profile 1 Color";
+    leds.push_back(p1_led);
+
+    led p2_led;
+    p2_led.name = "Profile 2 Color";
+    leds.push_back(p2_led);
+
+    led p3_led;
+    p3_led.name = "Profile 3 Color";
+    leds.push_back(p3_led);
 
     SetupColors();
 }
 
 void RGBController_GigabyteGhost::ResizeZone(int /*zone*/, int /*new_size*/)
 {
-    /* Single LED zone cannot be resized */
 }
 
 void RGBController_GigabyteGhost::DeviceUpdateLEDs()
 {
-    if(colors.empty())
+    if(colors.size() < 3)
     {
         return;
     }
 
-    RGBColor color = colors[0];
+    unsigned char r[3];
+    unsigned char g[3];
+    unsigned char b[3];
 
-    unsigned char r = RGBGetRValue(color);
-    unsigned char g = RGBGetGValue(color);
-    unsigned char b = RGBGetBValue(color);
+    for(int i = 0; i < 3; i++)
+    {
+        r[i] = RGBGetRValue(colors[i]);
+        g[i] = RGBGetGValue(colors[i]);
+        b[i] = RGBGetBValue(colors[i]);
+    }
 
-    unsigned char current_profile = modes[active_mode].value;
-
-    controller->SetProfileColor(current_profile, r, g, b);
+    controller->SetAllProfileColors(r, g, b);
 }
 
 void RGBController_GigabyteGhost::UpdateZoneLEDs(int /*zone*/)

@@ -224,7 +224,7 @@ void GigabyteGhostController::UnlockDevice(hid_device* dev)
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 }
 
-void GigabyteGhostController::SetProfileColor(unsigned char profile, unsigned char r, unsigned char g, unsigned char b)
+void GigabyteGhostController::SetAllProfileColors(unsigned char* r, unsigned char* g, unsigned char* b)
 {
     /* Mutex prevents concurrent updates from GUI/Effects engine */
     std::lock_guard<std::mutex> lock(update_mutex);
@@ -233,15 +233,22 @@ void GigabyteGhostController::SetProfileColor(unsigned char profile, unsigned ch
     hid_device* dev = hid_open_path(hid_path.c_str());
     if(!dev) return;
 
-    /* Protocol confirmed working via GHOST_Color_Tool.py:
-       flush -> packet_switch -> flush -> sleep(500ms) -> packet_color -> flush */
-    unsigned char profile_cmd[8] = { 0x01, 0x88, profile, 0x00, 0x00, 0x00, 0x00, 0x12 };
-    SendFeatureReport(dev, profile_cmd, 8);
+    for(unsigned char i = 0; i < 3; i++)
+    {
+        unsigned char profile_cmd[8] = { 0x01, 0x88, i, 0x00, 0x00, 0x00, 0x00, 0x12 };
+        SendFeatureReport(dev, profile_cmd, 8);
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-    unsigned char color_cmd[8] = { 0x01, 0x86, profile, r, g, b, 0x02, 0x00 };
-    SendFeatureReport(dev, color_cmd, 8);
+        unsigned char color_cmd[8] = { 0x01, 0x86, i, r[i], g[i], b[i], 0x02, 0x00 };
+        SendFeatureReport(dev, color_cmd, 8);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+
+    /* Switch back to profile 0 to leave the mouse in a consistent state */
+    unsigned char reset_cmd[8] = { 0x01, 0x88, 0x00, 0x00, 0x00, 0x00, 0x00, 0x12 };
+    SendFeatureReport(dev, reset_cmd, 8);
 
     /* Close immediately so the device is free again */
     hid_close(dev);

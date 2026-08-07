@@ -31,9 +31,9 @@ public:
     std::string GetNameString();
     std::string GetSerialString();
 
-    /* Opens a fresh HID handle, sends colour command, closes handle.
-       Exactly mirrors GHOST_Color_Tool.py which always opens fresh. */
-    void        SetProfileColor(unsigned char profile, unsigned char r, unsigned char g, unsigned char b);
+    /* Opens a fresh HID handle, sends colour command for ALL 3 PROFILES, closes handle.
+       Exactly mirrors GHOST_Color_Tool.py which always iterates all 3 profiles. */
+    void        SetAllProfileColors(unsigned char* r, unsigned char* g, unsigned char* b);
 
 private:
     std::string hid_path;   /* stored path to reopen per update */
