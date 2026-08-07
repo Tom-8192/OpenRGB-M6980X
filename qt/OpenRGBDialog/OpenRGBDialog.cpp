@@ -1672,10 +1672,25 @@ void OpenRGBDialog::onDetectionEnded()
             for(std::size_t device_idx = 0; device_idx < ResourceManager::get()->GetRGBControllers().size(); device_idx++)
             {
                 RGBController* dev = ResourceManager::get()->GetRGBControllers()[device_idx];
-                for(std::size_t color_idx = 0; color_idx < dev->colors.size(); color_idx++)
+                
+                /*-------------------------------------------------*\
+                | Update mode-specific colors                       |
+                \*-------------------------------------------------*/
+                for(std::size_t mode_idx = 0; mode_idx < dev->GetModeCount(); mode_idx++)
                 {
-                    dev->colors[color_idx] = ToRGBColor(r, g, b);
+                    if(dev->GetModeFlags(mode_idx) & MODE_FLAG_HAS_MODE_SPECIFIC_COLOR)
+                    {
+                        for(std::size_t color_idx = 0; color_idx < dev->GetModeColorsMax(mode_idx); color_idx++)
+                        {
+                            dev->SetModeColor(mode_idx, color_idx, ToRGBColor(r, g, b));
+                        }
+                    }
                 }
+                
+                /*-------------------------------------------------*\
+                | Update direct per-LED colors                      |
+                \*-------------------------------------------------*/
+                dev->SetAllColors(ToRGBColor(r, g, b));
                 dev->UpdateLEDs();
             }
         }
