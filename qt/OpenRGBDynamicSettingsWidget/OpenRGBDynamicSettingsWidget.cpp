@@ -376,6 +376,7 @@ OpenRGBDynamicSettingsWidget::OpenRGBDynamicSettingsWidget(std::string key, nloh
                     }
 
                     QObject::connect((QComboBox*)right_widget, qOverload<int>(&QComboBox::currentIndexChanged), this, &OpenRGBDynamicSettingsWidget::OnSettingChanged);
+                }
                 else if(type == "color")
                 {
                     std::string     value                   = JsonUtils::JsonGetString(schema, "default", "#000000");
