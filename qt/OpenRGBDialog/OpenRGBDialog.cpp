@@ -39,6 +39,7 @@
 #include <QScreen>
 #include <QSpinBox>
 #include <QThread>
+#include <QColor>
 
 #include <string>
 #include <functional>
@@ -174,6 +175,17 @@ OpenRGBDialog::OpenRGBDialog(QWidget *parent) : QMainWindow(parent), ui(new Ui::
     autostart_settings_schema["custom_arguments"]["type"]                   = "string";
     autostart_settings_schema["custom_arguments"]["description"]            = QT_TRANSLATE_NOOP("Settings", "Additional command line arguments to pass to OpenRGB when starting on login");
     autostart_settings_schema["custom_arguments"]["order"]                  = 2;
+
+    autostart_settings_schema["quick_color_enabled"]["title"]               = QT_TRANSLATE_NOOP("Settings", "Enable Quick Color at Startup");
+    autostart_settings_schema["quick_color_enabled"]["type"]                = "bool";
+    autostart_settings_schema["quick_color_enabled"]["description"]         = QT_TRANSLATE_NOOP("Settings", "Apply a specific color to all devices at startup");
+    autostart_settings_schema["quick_color_enabled"]["order"]               = 3;
+
+    autostart_settings_schema["quick_color"]["title"]                       = QT_TRANSLATE_NOOP("Settings", "Startup Quick Color");
+    autostart_settings_schema["quick_color"]["type"]                        = "color";
+    autostart_settings_schema["quick_color"]["description"]                 = QT_TRANSLATE_NOOP("Settings", "The color to apply to all devices");
+    autostart_settings_schema["quick_color"]["default"]                     = "#FF0000";
+    autostart_settings_schema["quick_color"]["order"]                       = 4;
 
     ResourceManager::get()->GetSettingsManager()->RegisterSettingsSchema("AutoStart", QT_TRANSLATE_NOOP("Settings", "Start at Login"), autostart_settings_schema, 2);
 
@@ -1637,6 +1649,37 @@ void OpenRGBDialog::onDetectionEnded()
     | Load the on open automatic profile                    |
     \*-----------------------------------------------------*/
     ResourceManager::get()->GetProfileManager()->LoadAutoProfileOpen();
+
+    /*-----------------------------------------------------*\
+    | Apply Startup Quick Color if enabled                  |
+    \*-----------------------------------------------------*/
+    nlohmann::json autostart_settings = ResourceManager::get()->GetSettingsManager()->GetSettings("AutoStart");
+    if(autostart_settings.contains("quick_color_enabled") && autostart_settings["quick_color_enabled"].is_boolean() && autostart_settings["quick_color_enabled"].get<bool>())
+    {
+        std::string hex_color = "#FF0000";
+        if(autostart_settings.contains("quick_color") && autostart_settings["quick_color"].is_string())
+        {
+            hex_color = autostart_settings["quick_color"].get<std::string>();
+        }
+        
+        QColor color(QString::fromStdString(hex_color));
+        if(color.isValid())
+        {
+            unsigned char r = color.red();
+            unsigned char g = color.green();
+            unsigned char b = color.blue();
+            
+            for(std::size_t device_idx = 0; device_idx < ResourceManager::get()->GetRGBControllers().size(); device_idx++)
+            {
+                RGBController* dev = ResourceManager::get()->GetRGBControllers()[device_idx];
+                for(std::size_t color_idx = 0; color_idx < dev->colors.size(); color_idx++)
+                {
+                    dev->colors[color_idx] = ToRGBColor(r, g, b);
+                }
+                dev->UpdateLEDs();
+            }
+        }
+    }
 }
 
 void OpenRGBDialog::onSettingsUpdated()

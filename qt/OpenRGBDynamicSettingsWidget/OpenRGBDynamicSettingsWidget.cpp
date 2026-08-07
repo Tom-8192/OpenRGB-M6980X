@@ -13,7 +13,8 @@
 #include "OpenRGBDynamicSettingsWidget.h"
 #include "ProfileManager.h"
 #include "ResourceManager.h"
-
+#include <QPushButton>
+#include <QColorDialog>
 
 
 static void OpenRGBDynamicSettingsWidgetProfileManagerCallback(void * this_ptr, unsigned int update_reason)
@@ -375,6 +376,20 @@ OpenRGBDynamicSettingsWidget::OpenRGBDynamicSettingsWidget(std::string key, nloh
                     }
 
                     QObject::connect((QComboBox*)right_widget, qOverload<int>(&QComboBox::currentIndexChanged), this, &OpenRGBDynamicSettingsWidget::OnSettingChanged);
+                else if(type == "color")
+                {
+                    std::string     value                   = JsonUtils::JsonGetString(schema, "default", "#000000");
+
+                    if(settings.contains(key))
+                    {
+                        value                               = JsonUtils::JsonGetString(settings, key);
+                    }
+
+                    right_widget                            = (QWidget*)new QPushButton();
+                    ((QPushButton*)right_widget)->setStyleSheet(QString::fromStdString("background-color: " + value + ";"));
+                    ((QPushButton*)right_widget)->setProperty("colorValue", QString::fromStdString(value));
+
+                    QObject::connect((QPushButton*)right_widget, &QPushButton::clicked, this, &OpenRGBDynamicSettingsWidget::OnColorButtonClicked);
                 }
             }
 
@@ -463,9 +478,32 @@ void OpenRGBDynamicSettingsWidget::OnSettingChanged()
         settings_change[key]            = value;
     }
 
+    else if(type == "color")
+    {
+        std::string     value           = ((QPushButton*)right_widget)->property("colorValue").toString().toStdString();
+        settings_change[key]            = value;
+    }
+
     if(callback)
     {
         callback(callback_arg, key, settings_change);
+    }
+}
+
+void OpenRGBDynamicSettingsWidget::OnColorButtonClicked()
+{
+    if(type == "color")
+    {
+        QPushButton* btn = (QPushButton*)right_widget;
+        QColor current_color(btn->property("colorValue").toString());
+        QColor new_color = QColorDialog::getColor(current_color, this, tr("Select Color"));
+        if(new_color.isValid())
+        {
+            QString hex = new_color.name(QColor::HexRgb);
+            btn->setProperty("colorValue", hex);
+            btn->setStyleSheet("background-color: " + hex + ";");
+            OnSettingChanged();
+        }
     }
 }
 

@@ -32,6 +32,7 @@ public:
 
     void SetCallback(OpenRGBDynamicSettingsCallback callback, void* callback_arg);
     void OnSettingChanged();
+    void OnColorButtonClicked();
 
 private:
     std::string                     description;
