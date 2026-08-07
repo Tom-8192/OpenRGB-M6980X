@@ -229,12 +229,36 @@ void GigabyteGhostController::SetAllProfileColors(unsigned char* r, unsigned cha
     /* Mutex prevents concurrent updates from GUI/Effects engine */
     std::lock_guard<std::mutex> lock(update_mutex);
 
+    bool needs_update = false;
+    bool changed[3] = { false, false, false };
+
+    for(int i = 0; i < 3; i++)
+    {
+        if(first_update || r[i] != last_r[i] || g[i] != last_g[i] || b[i] != last_b[i])
+        {
+            changed[i] = true;
+            needs_update = true;
+            last_r[i] = r[i];
+            last_g[i] = g[i];
+            last_b[i] = b[i];
+        }
+    }
+
+    if(!needs_update)
+    {
+        return; /* Nothing changed, do not overwhelm the mouse! */
+    }
+
+    first_update = false;
+
     /* Open a fresh handle for every update, just like GHOST_Color_Tool.py */
     hid_device* dev = hid_open_path(hid_path.c_str());
     if(!dev) return;
 
     for(unsigned char i = 0; i < 3; i++)
     {
+        if(!changed[i]) continue; /* Skip profiles that haven't changed */
+
         unsigned char profile_cmd[8] = { 0x01, 0x88, i, 0x00, 0x00, 0x00, 0x00, 0x12 };
         SendFeatureReport(dev, profile_cmd, 8);
 
@@ -249,6 +273,9 @@ void GigabyteGhostController::SetAllProfileColors(unsigned char* r, unsigned cha
     /* Switch back to profile 0 to leave the mouse in a consistent state */
     unsigned char reset_cmd[8] = { 0x01, 0x88, 0x00, 0x00, 0x00, 0x00, 0x00, 0x12 };
     SendFeatureReport(dev, reset_cmd, 8);
+
+    /* Allow the mouse time to process the reset before the next possible update */
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
     /* Close immediately so the device is free again */
     hid_close(dev);

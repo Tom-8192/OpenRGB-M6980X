@@ -42,6 +42,11 @@ private:
     std::string version;
     std::mutex  update_mutex;
 
+    unsigned char last_r[3] = { 255, 255, 255 };
+    unsigned char last_g[3] = { 255, 255, 255 };
+    unsigned char last_b[3] = { 255, 255, 255 };
+    bool          first_update = true;
+
     static void Flush(hid_device* dev);
     static bool SendFeatureReport(hid_device* dev, const unsigned char* data, size_t size);
     static void UnlockDevice(hid_device* dev);
