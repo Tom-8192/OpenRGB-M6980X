@@ -20,19 +20,6 @@
     @comment
 \*-------------------------------------------------------------------*/
 
-static unsigned char QuantizeChannel(RGBColor channel_val)
-{
-    if(channel_val < 64)
-    {
-        return 0x00;
-    }
-    else if(channel_val < 192)
-    {
-        return 0x01;
-    }
-    return 0x02;
-}
-
 RGBController_GigabyteGhost::RGBController_GigabyteGhost(GigabyteGhostController* controller_ptr)
 {
     controller  = controller_ptr;
@@ -42,12 +29,26 @@ RGBController_GigabyteGhost::RGBController_GigabyteGhost(GigabyteGhostController
     description = "Gigabyte GHOST Gaming Mouse Device";
     location    = controller->GetDeviceLocation();
 
-    mode StaticMode;
-    StaticMode.name       = "Static";
-    StaticMode.value      = 0;
-    StaticMode.flags      = MODE_FLAG_HAS_MODE_SPECIFIC_COLOR | MODE_FLAG_MANUAL_SAVE;
-    StaticMode.color_mode = MODE_COLORS_PER_LED;
-    modes.push_back(StaticMode);
+    mode Profile1;
+    Profile1.name       = "Profile 1";
+    Profile1.value      = 0;
+    Profile1.flags      = MODE_FLAG_HAS_MODE_SPECIFIC_COLOR | MODE_FLAG_MANUAL_SAVE;
+    Profile1.color_mode = MODE_COLORS_PER_LED;
+    modes.push_back(Profile1);
+
+    mode Profile2;
+    Profile2.name       = "Profile 2";
+    Profile2.value      = 1;
+    Profile2.flags      = MODE_FLAG_HAS_MODE_SPECIFIC_COLOR | MODE_FLAG_MANUAL_SAVE;
+    Profile2.color_mode = MODE_COLORS_PER_LED;
+    modes.push_back(Profile2);
+
+    mode Profile3;
+    Profile3.name       = "Profile 3";
+    Profile3.value      = 2;
+    Profile3.flags      = MODE_FLAG_HAS_MODE_SPECIFIC_COLOR | MODE_FLAG_MANUAL_SAVE;
+    Profile3.color_mode = MODE_COLORS_PER_LED;
+    modes.push_back(Profile3);
 
     SetupZones();
 }
@@ -88,12 +89,13 @@ void RGBController_GigabyteGhost::DeviceUpdateLEDs()
 
     RGBColor color = colors[0];
 
-    unsigned char r = QuantizeChannel(RGBGetRValue(color));
-    unsigned char g = QuantizeChannel(RGBGetGValue(color));
-    unsigned char b = QuantizeChannel(RGBGetBValue(color));
+    unsigned char r = RGBGetRValue(color);
+    unsigned char g = RGBGetGValue(color);
+    unsigned char b = RGBGetBValue(color);
 
-    // Profile 0 (original working configuration)
-    controller->SetProfileColor(0x00, r, g, b);
+    unsigned char current_profile = modes[active_mode].value;
+
+    controller->SetProfileColor(current_profile, r, g, b);
 }
 
 void RGBController_GigabyteGhost::UpdateZoneLEDs(int /*zone*/)
